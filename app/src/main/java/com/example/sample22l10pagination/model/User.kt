@@ -1,4 +1,4 @@
-package com.example.sample22l10pagination
+package com.example.sample22l10pagination.model
 
 import com.google.gson.annotations.SerializedName
 

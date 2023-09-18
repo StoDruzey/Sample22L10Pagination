@@ -1,4 +1,4 @@
-package com.example.sample22l10pagination
+package com.example.sample22l10pagination.adapter
 
 import com.example.sample22l10pagination.databinding.ItemLoadingBinding
 import com.example.sample22l10pagination.databinding.ItemUserBinding
@@ -8,11 +8,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
+import com.example.sample22l10pagination.model.PagingData
+import com.example.sample22l10pagination.model.User
 
 
 class UserAdapter(
-    context: Context
+    context: Context,
+    private val onUserClicked: (User) -> Unit
 ) : ListAdapter<PagingData<User>, RecyclerView.ViewHolder>(DIFF_UTIL) {
 
     private val layoutInflater = LayoutInflater.from(context)
@@ -28,7 +30,8 @@ class UserAdapter(
         return when (viewType) {
             TYPE_USER -> {
                 UserViewHolder(
-                    binding = ItemUserBinding.inflate(layoutInflater, parent, false)
+                    binding = ItemUserBinding.inflate(layoutInflater, parent, false),
+                    onUserClicked = onUserClicked
                 )
             }
             TYPE_LOADING -> {
@@ -49,7 +52,6 @@ class UserAdapter(
             is PagingData.Loading -> {
                 //no op
             }
-
         }
     }
 
@@ -75,16 +77,3 @@ class UserAdapter(
         }
     }
 }
-
-class UserViewHolder(
-    private val binding: ItemUserBinding
-) : RecyclerView.ViewHolder(binding.root) {
-    fun bind(item: User) {
-        with(binding) {
-            imageAvatar.load(item.avatarUrl)
-            userName.text =item.login
-        }
-    }
-}
-
-class LoadingViewHolder(binding: ItemLoadingBinding) : RecyclerView.ViewHolder(binding.root)

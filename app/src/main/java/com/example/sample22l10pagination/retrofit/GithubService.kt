@@ -1,4 +1,4 @@
-package com.example.sample22l10pagination
+package com.example.sample22l10pagination.retrofit
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

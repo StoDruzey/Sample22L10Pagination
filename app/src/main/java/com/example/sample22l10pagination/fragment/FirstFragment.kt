@@ -1,4 +1,4 @@
-package com.example.sample22l10pagination
+package com.example.sample22l10pagination.fragment
 
 import android.graphics.Rect
 import android.os.Bundle
@@ -7,8 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.sample22l10pagination.retrofit.GithubService
+import com.example.sample22l10pagination.model.PagingData
+import com.example.sample22l10pagination.model.User
+import com.example.sample22l10pagination.adapter.UserAdapter
+import com.example.sample22l10pagination.addHorizontalSpaceDecoration
+import com.example.sample22l10pagination.addPaginationScrollListener
 import com.example.sample22l10pagination.databinding.FragmentFirstBinding
 import retrofit2.Call
 import retrofit2.Callback
@@ -20,8 +27,22 @@ class FirstFragment : Fragment() {
     private var _binding: FragmentFirstBinding? = null
     private val binding get() = requireNotNull(_binding)
     private var currentRequest: Call<List<User>>? = null
+    private var currentPage = 0
     private val currentUsers = mutableListOf<User>()
-    private val adapter by lazy { UserAdapter(requireContext()) }
+    private val adapter by lazy {
+        UserAdapter(
+            requireContext(),
+            onUserClicked = {
+                findNavController()
+                    .navigate(
+                        FirstFragmentDirections.toDetailsFragment(
+                            it.avatarUrl,
+                            it.login,
+                            it.id
+                        )
+                    )
+            }
+        ) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,31 +59,22 @@ class FirstFragment : Fragment() {
 
         with(binding) {
             swipeRefresh.setOnRefreshListener {
+                currentPage = 0
+                currentRequest?.cancel()
+                currentRequest = null
                 executeRequest {
                     swipeRefresh.isRefreshing = false
                 }
             }
-
-            recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                }
-            })
-            recyclerView.adapter = adapter
-            recyclerView.addItemDecoration(
-                object : RecyclerView.ItemDecoration() {
-                    override fun getItemOffsets(
-                        outRect: Rect,
-                        view: View,
-                        parent: RecyclerView,
-                        state: RecyclerView.State
-                    ) {
-                        outRect.bottom = 50
-                    }
-                }
+            val linearLayoutManager = LinearLayoutManager(
+                view.context, LinearLayoutManager.VERTICAL, false
             )
-
-
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = linearLayoutManager
+            recyclerView.addHorizontalSpaceDecoration(RECYCLER_ITEM_SPACE)
+            recyclerView.addPaginationScrollListener(linearLayoutManager, COUNT_TO_LOAD) {
+                executeRequest()
+            }
 
 //            toolbar
 //                .menu
@@ -101,9 +113,11 @@ class FirstFragment : Fragment() {
             onRequestFinished()
             currentRequest = null
         }
-        currentRequest?.cancel()
+        if (currentRequest != null) return
+        val since = currentPage * PER_PAGE
+
         currentRequest = GithubService.api
-            .getUsers(1, 100)
+            .getUsers(since, PER_PAGE)
             .apply {
                 enqueue(object : Callback<List<User>> {
                     override fun onResponse(
@@ -113,9 +127,12 @@ class FirstFragment : Fragment() {
                         if (response.isSuccessful) {
                             val users = response.body() ?: return
                             currentUsers.addAll(users)
-                            val items =
-                                users.map { PagingData.Item(it) } + PagingData.Loading
+                            val items = adapter.currentList
+                                .dropLastWhile { it == PagingData.Loading }
+                                .plus(users.map { PagingData.Item(it) })
+                                .plus(PagingData.Loading)
                             adapter.submitList(items)
+                            currentPage++
                         } else {
                             handleException(HttpException(response))
                         }
@@ -131,23 +148,9 @@ class FirstFragment : Fragment() {
                 })
             }
     }
-
-    fun RecyclerView.addPaginationScrollListener(
-        layoutManager: LinearLayoutManager,
-        itemsToLoad: Int,
-        onLoadMore: () -> Unit
-    ) {
-        addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-
-                if (dy != 0 && totalItemCount <= (lastVisibleItem + itemsToLoad)) {
-                    recyclerView.post(onLoadMore)
-                }
-            }
-        })
+    companion object {
+        private const val COUNT_TO_LOAD = 35
+        private const val PER_PAGE = 50
+        private const val RECYCLER_ITEM_SPACE = 50
     }
 }
