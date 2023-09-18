@@ -1,6 +1,5 @@
 package com.example.sample22l10pagination.fragment
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,6 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.sample22l10pagination.retrofit.GithubService
 import com.example.sample22l10pagination.model.PagingData
 import com.example.sample22l10pagination.model.User
