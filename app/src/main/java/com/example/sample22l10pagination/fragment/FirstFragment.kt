@@ -147,8 +147,8 @@ class FirstFragment : Fragment() {
             }
     }
     companion object {
-        private const val COUNT_TO_LOAD = 35
-        private const val PER_PAGE = 50
+        private const val COUNT_TO_LOAD = 5
+        private const val PER_PAGE = 20
         private const val RECYCLER_ITEM_SPACE = 50
     }
 }

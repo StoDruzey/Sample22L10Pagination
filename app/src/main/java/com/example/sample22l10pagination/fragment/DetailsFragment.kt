@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.load
 import com.example.sample22l10pagination.databinding.FragmentDetailsBinding
@@ -29,6 +30,9 @@ class DetailsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         with(binding) {
+            toolbar.setNavigationOnClickListener {
+                findNavController().navigateUp()
+            }
             userAvatar.load(args.imageUrl)
             userLogin.text = args.login
             userId.text = args.id.toString()
